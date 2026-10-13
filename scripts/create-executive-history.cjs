@@ -164,9 +164,10 @@ replace('<div class="table-wrap">', `<div class="bulk-approval-bar"><button type
 <div class="table-wrap">`);
 replace('function render(){', `function approveFilteredRows(){
  if(!parseScoreRange($('scoreRangeFilter').value).ok)return;
- const pending=getFilteredSortedData().filter(row=>!isApproved(row));
- if(!pending.length)return;
- pending.forEach(row=>{approvalState[recordKey(row)]=true;});
+ const filtered=getFilteredSortedData();
+ if(!filtered.length)return;
+ const approve=!filtered.every(isApproved);
+ filtered.forEach(row=>{approvalState[recordKey(row)]=approve;});
  markRoundDirty();
  render();
  updateApprovalDashboard();
@@ -175,8 +176,10 @@ replace('function render(){', `function approveFilteredRows(){
 function render(){`);
 replace(' window._filtered=arr;', ` const pending=arr.filter(row=>!isApproved(row)).length;
  const valid=parseScoreRange($('scoreRangeFilter').value).ok;
- $('approveFiltered').disabled=!valid||pending===0;
- $('approveFiltered').textContent='อนุมัติทั้งหมดตาม Filter ('+arr.length+' จุด)';
+ const allApproved=arr.length>0&&pending===0;
+ $('approveFiltered').disabled=!valid||arr.length===0;
+ $('approveFiltered').setAttribute('aria-pressed',String(allApproved));
+ $('approveFiltered').textContent=(allApproved?'ล้างอนุมัติทั้งหมดตาม Filter':'อนุมัติทั้งหมดตาม Filter')+' ('+arr.length+' จุด)';
  $('bulkApprovalCount').textContent=valid?'ตรง Filter '+arr.length+' จุด · อนุมัติแล้ว '+(arr.length-pending)+' จุด · ยังไม่อนุมัติ '+pending+' จุด':'กรุณาแก้ไขช่วงคะแนนก่อนอนุมัติ';
  window._filtered=arr;`);
 replace('setupSorting();', `$('basinFilter').innerHTML='<option value="">ทุกลุ่มน้ำ</option>'+[...new Set(DATA.flatMap(recordBasins))].sort((a,b)=>a.localeCompare(b,'th')).map(basin=>'<option value="'+esc(basin)+'">'+esc(basin)+'</option>').join('');
