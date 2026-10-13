@@ -36,7 +36,7 @@ npm test
 
 ## เปิดดูผ่าน GitHub Pages
 
-GitHub Pages แสดงข้อมูล 85 จุด ตัวกรองและรายละเอียดในโหมดสำหรับเปิดดู ประวัติ Master และรูปที่อัปโหลดใน localhost เก็บอยู่บนเครื่องที่ใช้งาน ไม่รวมในเว็บ Pages ฟังก์ชันบันทึก อนุมัติ และจัดการรูปใช้ผ่าน localhost
+GitHub Pages แสดงข้อมูล 85 จุด พร้อมตัวกรอง รายละเอียด และการเลือก/ยกเลิกอนุมัติตามไฟล์ตัวอย่าง มีสรุปยอดรายจังหวัด เป้าหมาย 70 จุด และอนุมัติทั้งหมดตาม Filter ผลการเลือกบน Pages มีผลเฉพาะรอบที่เปิดอยู่ รีเฟรชเริ่มรอบใหม่ ไม่บันทึกในเบราว์เซอร์หรือ Master ของ localhost การบันทึก Master และจัดการรูปใช้ผ่าน localhost ประวัติและรูปที่อัปโหลดใน localhost ยังเก็บอยู่บนเครื่องที่ใช้งานและไม่รวมในเว็บ Pages
 
 สร้างไฟล์ Pages ด้วย `node scripts/build-executive-pages.cjs` และตรวจด้วย `node scripts/test-executive-pages.cjs` Workflow `.github/workflows/pages.yml` เผยแพร่ผลสร้างบน branch main หลังเปิด GitHub Pages ใน repository
 
