@@ -1,0 +1,85 @@
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const {chromium,executablePath}=require('./executive-browser-test.cjs');
+(async()=>{
+ const browser=await chromium.launch({executablePath,headless:true});
+ const context=await browser.newContext({viewport:{width:1440,height:1000}});
+ const fixture=await context.newPage();
+ const files=[];
+ for(const [index,color] of ['#082b55','#176fc1','#13704e'].entries()){
+  await fixture.setContent(`<body style="margin:0;background:${color};color:white;display:grid;place-items:center;font:64px Tahoma;height:100vh">TEST IMAGE ${index+1}</body>`);
+  const file=path.resolve(__dirname,`../tmp/executive-fixture-${index+1}.png`);await fixture.screenshot({path:file});files.push(file);
+ }
+ await fixture.close();
+ const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ const base=process.env.EXECUTIVE_TEST_URL;
+ await page.goto(base+'images');
+ await page.waitForFunction(()=>!document.querySelector('#imageView').hidden);
+ assert.equal(await page.locator('.history-nav a').count(),3);
+ await page.locator('#uploadImages').click();
+ assert.match(await page.locator('#imageStatus').textContent(),/เลือกจุดติดตั้ง/);
+ await page.locator('#imageStation').selectOption('KKN-AWS-02');
+ await page.locator('#imageFiles').setInputFiles(files);
+ await page.locator('#uploadImages').click();
+ await page.waitForFunction(()=>document.querySelector('#imageStatus').textContent.includes('อัปโหลดสำเร็จ 3 / 3'));
+ assert.equal(await page.locator('.image-item').count(),3);
+ await page.locator('#dashboardNav').click();
+ await page.locator('#rows .btn-detail').first().click();
+ await page.waitForFunction(()=>document.querySelector('#galleryImage').naturalWidth>0);
+ assert.match(await page.locator('#galleryCaption').textContent(),/^1 \/ 3/);
+ assert.equal(await page.locator('#galleryPrev').isDisabled(),true);
+ await page.locator('#galleryNext').click();assert.match(await page.locator('#galleryCaption').textContent(),/^2 \/ 3/);
+ await page.locator('#galleryPrev').click();assert.match(await page.locator('#galleryCaption').textContent(),/^1 \/ 3/);
+ await page.locator('#galleryNext').click();await page.locator('#galleryNext').click();
+ assert.equal(await page.locator('#galleryNext').isDisabled(),true);
+ await page.reload();
+ await page.locator('#rows .btn-detail').first().click();
+ await page.waitForFunction(()=>document.querySelector('#galleryCaption').textContent.startsWith('1 / 3'));
+ const position=await page.evaluate(()=>{
+  const approval=document.querySelector('.drawer-approval');const gallery=document.querySelector('#detailGallery');
+  return {drawer:!!gallery.closest('#drawer'),order:approval.nextElementSibling===gallery};
+ });assert.deepEqual(position,{drawer:true,order:true});
+ await page.waitForFunction(()=>document.querySelector('#drawer').getBoundingClientRect().right<=window.innerWidth+1);
+ await page.screenshot({path:path.resolve(__dirname,'../tmp/executive-detail-station-images.png')});
+ await page.locator('#closeBtn').click();
+ // Another station must never show the first station's photos.
+ await page.locator('#rows .btn-detail').nth(1).click();
+ assert.equal(await page.locator('#galleryImage').isHidden(),true);
+ assert.match(await page.locator('#galleryEmpty').textContent(),/ยังไม่มีรูปภาพของจุดนี้/);
+ await page.locator('#closeBtn').click();
+ await page.locator('#imageNav').click();
+ await page.locator('#imageStation').selectOption('KKN-AWS-02');
+ await page.waitForFunction(()=>document.querySelectorAll('.image-item').length===3);
+ page.once('dialog',dialog=>dialog.dismiss());await page.locator('[data-delete-image]').first().click();assert.equal(await page.locator('.image-item').count(),3);
+ page.once('dialog',dialog=>dialog.accept());await page.locator('[data-delete-image]').first().click();
+ await page.waitForFunction(()=>document.querySelectorAll('.image-item').length===2);
+ // Move an uploaded image to a second station and check both isolated galleries.
+ await page.locator('[data-image-station]').last().selectOption('UTT-AWS-05');
+ await page.locator('[data-assign-image]').last().click();
+ await page.waitForFunction(()=>document.querySelectorAll('.image-item').length===1);
+ await page.locator('#imageStation').selectOption('UTT-AWS-05');
+ assert.equal(await page.locator('.image-item').count(),1);
+ await page.locator('#dashboardNav').click();await page.locator('#rows .btn-detail').nth(1).click();
+ await page.waitForFunction(()=>document.querySelector('#galleryImage').naturalWidth>0);
+ assert.match(await page.locator('#galleryCaption').textContent(),/^1 \/ 1/);
+ await page.locator('#closeBtn').click();await page.locator('#imageNav').click();
+ // Reject invalid input without changing the successful uploads.
+ const invalid=path.resolve(__dirname,'../tmp/executive-not-image.png');fs.writeFileSync(invalid,'This is not an image');
+ await page.locator('#imageFiles').setInputFiles(invalid);await page.locator('#uploadImages').click();
+ await page.waitForFunction(()=>document.querySelector('#imageStatus').textContent.includes('อัปโหลดสำเร็จ 0 / 1'));
+ assert.equal(await page.locator('.image-item').count(),1);
+ await page.locator('#refreshImages').click();await page.screenshot({path:path.resolve(__dirname,'../tmp/executive-local-image-master.png')});
+ await context.close();
+ const other=await browser.newContext();const otherPage=await other.newPage();await otherPage.goto(base);
+ await otherPage.locator('#rows .btn-detail').first().click();
+ await otherPage.waitForFunction(()=>document.querySelector('#galleryCaption').textContent.startsWith('1 / 1'));
+ await otherPage.waitForFunction(()=>document.querySelector('#galleryImage').naturalWidth>0);
+ await otherPage.setViewportSize({width:390,height:844});
+ await otherPage.locator('#closeBtn').click();
+ await otherPage.locator('#imageNav').click();
+ assert.equal(await otherPage.locator('#imageView').evaluate(el=>el.scrollWidth<=el.clientWidth),true);
+ assert.deepEqual(errors,[]);
+ await browser.close();
+ console.log('PASS: 2 Master menus, multi-image upload, real image rendering, previous/next, refresh and separate-browser persistence, cancel/delete, invalid-file rejection, mobile image management.');
+})().catch(error=>{console.error(error);process.exit(1);});

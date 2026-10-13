@@ -1,0 +1,36 @@
+[
+ {
+  "station_id":"LOCAL-PBI-RAIKOK",
+  "place":"องค์การบริหารส่วนตำบลไร่โคก",
+  "province":"เพชรบุรี",
+  "district":"บ้านลาด",
+  "subdistrict":"ไร่โคก",
+  "basin":"ไม่มีข้อมูลลุ่มน้ำในแหล่งอ้างอิง",
+  "lat":13.11605692,
+  "long":99.83494837,
+  "primary":"น้ำท่วมขัง",
+  "secondary":"น้ำล้นตลิ่ง",
+  "zone":"ส้ม",
+  "risk":70,
+  "spatial":71.83,
+  "final":70.915,
+  "details":{
+   "รหัสสถานีทางการ":"ไม่พบในแหล่งอ้างอิง",
+   "รหัสอ้างอิงภายในระบบ":"LOCAL-PBI-RAIKOK (ใช้ผูกข้อมูลและรูปภาพ ไม่ใช่รหัสสถานีทางการ)",
+   "แหล่งข้อมูล":"executive_site_candidate_dashboard_v8.html · DATA.classA[14]",
+   "คำอธิบายคะแนน":"SpatialScore 71.83 จากไฟล์รุ่นก่อน · RiskScore 70 ตามเกณฑ์พื้นที่สีส้มของระบบ · FinalScore 50:50 คำนวณใหม่ = 70.915",
+   "หมายเหตุ":"เพิ่มคืนตามรายชื่อตัวแทนจังหวัดที่ผู้ใช้ระบุ · แหล่งเดิมไม่ระบุลุ่มน้ำและรหัสสถานีทางการ"
+  },
+  "score_breakdown":{
+   "spatial_excel":71.83,
+   "network_gap_score":91.66,
+   "slope_score":100,
+   "relief_score":20,
+   "elev_score":20,
+   "computed":71.83,
+   "computed_display":"71.83"
+  },
+  "cbs_evidence":null,
+  "nearest_station":{"station_id":"BLAT","station_name":"ทต.บ้านลาด","distance_km":11.485}
+ }
+]

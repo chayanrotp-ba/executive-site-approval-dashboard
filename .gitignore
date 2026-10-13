@@ -1,0 +1,8 @@
+node_modules/
+.runtime/
+tmp/
+data/executive-master/
+.env
+.env.*
+!.env.example
+debug.log

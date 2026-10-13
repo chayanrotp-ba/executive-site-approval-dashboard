@@ -1,0 +1,42 @@
+const assert=require('node:assert/strict');
+const {chromium,executablePath}=require('./executive-browser-test.cjs');
+(async()=>{
+ const browser=await chromium.launch({executablePath,headless:true});
+ const page=await browser.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ const base=process.env.EXECUTIVE_TEST_URL;
+ await page.goto(base);
+ // Preserve an existing selection outside the representative filter.
+ const outside=page.locator('#rows [data-approval-key="KKN-AWS-01"]');await outside.click();
+ await page.locator('#representativeFilter').selectOption('representative');
+ assert.match(await page.locator('#approveFiltered').textContent(),/20 จุด/);
+ await page.locator('#approveFiltered').click();
+ assert.equal(await page.locator('#rows .is-approved').count(),20);
+ assert.equal(await page.locator('#approvedTotal').textContent(),'21');
+ assert.equal(await page.locator('#approveFiltered').isDisabled(),true);
+ await page.locator('#clearExecFilters').click();
+ assert.equal(await outside.getAttribute('class'),'approval-btn is-approved');
+ assert.equal(await page.locator('#rows .is-approved').count(),21);
+ await page.locator('#provinceFilter').selectOption('ขอนแก่น');
+ await page.locator('#basinFilter').selectOption('ลุ่มน้ำชี');
+ await page.locator('#scoreRangeFilter').fill('90-80');
+ assert.equal(await page.locator('#rows tr').count(),1);
+ assert.equal(await page.locator('#approveFiltered').isDisabled(),true);
+ assert.equal(await page.locator('#approvedTotal').textContent(),'21');
+ // Narrow score interval selects a previously unapproved station.
+ await page.locator('#scoreRangeFilter').fill('79-78');
+ assert.equal(await page.locator('#rows tr').count(),1);
+ await page.locator('#approveFiltered').click();
+ assert.equal(await page.locator('#approvedTotal').textContent(),'22');
+ await page.locator('#scoreRangeFilter').fill('bad');assert.equal(await page.locator('#approveFiltered').isDisabled(),true);
+ await page.locator('#scoreRangeFilter').fill('1');assert.equal(await page.locator('#approveFiltered').isDisabled(),true);
+ await page.locator('#clearExecFilters').click();assert.equal(await page.locator('#rows .is-approved').count(),22);
+ await page.locator('#roundNote').fill('ทดสอบอนุมัติตาม Filter');await page.locator('#saveRound').click();
+ await page.waitForFunction(()=>document.querySelector('#saveStatus').textContent.startsWith('บันทึกสำเร็จ'));
+ const rounds=await (await fetch(base+'api/executive/rounds')).json();
+ assert.equal(rounds.length,1);assert.equal(rounds[0].approvedCount,22);assert.equal(rounds[0].rows.length,85);
+ await page.reload();assert.equal(await page.locator('#approvedTotal').textContent(),'0');
+ await page.locator('#approveFiltered').click();assert.equal(await page.locator('#approvedTotal').textContent(),'85');
+ assert.equal(await page.locator('#approveFiltered').isDisabled(),true);
+ await fetch(base+'api/executive/rounds/'+rounds[0].id,{method:'DELETE'});
+ assert.deepEqual(errors,[]);await browser.close();console.log('PASS: approve 20 representatives only, preserve outside approvals, combined province/basin/score filters, repeat/empty/invalid guard, save 22 approvals, refresh reset, approve all 85 with no filter.');
+})().catch(error=>{console.error(error);process.exit(1);});

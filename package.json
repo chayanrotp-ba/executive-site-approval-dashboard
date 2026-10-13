@@ -1,0 +1,17 @@
+{
+  "name": "executive-site-approval-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local executive site approval dashboard with 20 province representatives and persistent Master history/images",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node scripts/executive-server.cjs",
+    "build": "node scripts/create-executive-history.cjs",
+    "test": "node scripts/test-executive-local.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}
