@@ -1,6 +1,7 @@
 node_modules/
 .runtime/
 tmp/
+.pages-dist/
 data/executive-master/
 .env
 .env.*

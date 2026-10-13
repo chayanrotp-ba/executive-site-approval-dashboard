@@ -34,4 +34,10 @@ npm test
 
 การทดสอบใช้พอร์ต 4185 และ Master แยกใน tmp การบันทึกและอัปโหลดใช้ Node.js API จึงต้องรันผ่าน localhost; GitHub Pages ไม่รองรับ API นี้
 
+## เปิดดูผ่าน GitHub Pages
+
+GitHub Pages แสดงข้อมูล 85 จุด ตัวกรองและรายละเอียดในโหมดสำหรับเปิดดู ประวัติ Master และรูปที่อัปโหลดใน localhost เก็บอยู่บนเครื่องที่ใช้งาน ไม่รวมในเว็บ Pages ฟังก์ชันบันทึก อนุมัติ และจัดการรูปใช้ผ่าน localhost
+
+สร้างไฟล์ Pages ด้วย `node scripts/build-executive-pages.cjs` และตรวจด้วย `node scripts/test-executive-pages.cjs` Workflow `.github/workflows/pages.yml` เผยแพร่ผลสร้างบน branch main หลังเปิด GitHub Pages ใน repository
+
 รายละเอียดแหล่งข้อมูล คะแนนไร่โคก และการจัดการประวัติ: [คู่มือระบบ](docs/executive-local.md)
